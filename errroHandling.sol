@@ -1,26 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract ErrorHandling {
+contract SchoolGradingSystem {
     address public owner;
+    mapping(string => uint8) private studentGrades;
+
+    event GradeAssigned(string indexed student, uint8 grade);
 
     constructor() {
         owner = msg.sender;
     }
 
-    function setOwner(address newOwner) public {
-        owner = newOwner;
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can perform this action");
+        _;
     }
 
-    function testRequire(uint value) public pure {
-        require(value > 10, "Value must be greater than 10");
+    function setGrade(string memory student, uint8 grade) public onlyOwner {
+        require(bytes(student).length > 0, "Student name cannot be empty");
+        require(grade >= 0 && grade <= 100, "Grade must be between 0 and 100");
+        studentGrades[student] = grade;
+        emit GradeAssigned(student, grade);
     }
 
-    function testAssert() public view{
-        assert(owner == 0x0000000000000000000000000000000000000000);
+    function getGrade(string memory student) public view returns (uint8) {
+        require(bytes(student).length > 0, "Student name cannot be empty");
+        uint8 grade = studentGrades[student];
+        assert(grade <= 100); 
+        return grade;
     }
 
-    function testRevert() public pure{
+    function removeGrade(string memory student) public onlyOwner {
+        require(bytes(student).length > 0, "Student name cannot be empty");
+        require(studentGrades[student] != 0, "No grade assigned to this student");
+        delete studentGrades[student];
+    }
+
+    function testRevert() public pure {
         revert("This is a revert statement");
     }
 }
